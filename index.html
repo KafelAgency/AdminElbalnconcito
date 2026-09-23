@@ -282,6 +282,121 @@
       display:flex;align-items:center;gap:.3rem;
       margin-top:.25rem;
     }
+  
+    /* ===== HISTORIAL POR MESA ===== */
+    .historial-wrapper{
+      max-width:1240px;margin:3rem auto 0;
+    }
+
+    .historial-header{
+      display:flex;align-items:center;justify-content:space-between;
+      flex-wrap:wrap;gap:1rem;
+      padding-bottom:.75rem;margin-bottom:1.75rem;
+      border-bottom:1px solid var(--line);
+    }
+
+    .historial-title{
+      font-family:var(--font-display);font-size:1.05rem;font-weight:800;
+      letter-spacing:-.015em;
+      display:flex;align-items:center;gap:.75rem;
+    }
+    .historial-title::before{
+      content:'';display:inline-block;flex-shrink:0;
+      width:5px;height:1.25rem;background:var(--muted);border-radius:1px;
+    }
+
+    .historial-meta{
+      font-size:.7rem;color:var(--muted);font-weight:500;
+      text-transform:uppercase;letter-spacing:.12em;
+    }
+
+    .btn-clear-hist{
+      font-family:var(--font-body);font-size:.7rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.1em;cursor:pointer;
+      background:transparent;
+      border:1px solid rgba(255,107,107,.4);color:var(--accent-red);
+      border-radius:.4rem;padding:.5rem .9rem;
+      transition:background .25s var(--ease),color .25s var(--ease);
+    }
+    .btn-clear-hist:hover{background:var(--accent-red);color:#fff}
+
+    .historial-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:1.25rem;
+    }
+
+    .mesa-card{
+      background:var(--surface);border:1px solid var(--line);
+      border-radius:.6rem;overflow:hidden;
+    }
+
+    .mesa-card-head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.75rem 1rem;
+      background:var(--surface-2);border-bottom:1px solid var(--line);
+    }
+
+    .mesa-card-name{
+      font-size:.85rem;font-weight:700;letter-spacing:.02em;color:var(--ink);
+      display:flex;align-items:center;gap:.5rem;
+    }
+
+    .mesa-card-count{
+      font-family:var(--font-display);font-size:1.1rem;font-weight:800;
+      color:var(--gold);letter-spacing:-.02em;
+    }
+
+    .hist-item{
+      display:flex;align-items:flex-start;justify-content:space-between;
+      gap:.75rem;padding:.7rem 1rem;
+      border-bottom:1px solid var(--line);
+      transition:background .2s;
+    }
+    .hist-item:last-child{border-bottom:none}
+    .hist-item:hover{background:var(--surface-2)}
+
+    .hist-cancion{
+      font-size:.88rem;font-weight:600;color:var(--ink);
+      line-height:1.3;word-break:break-word;
+    }
+    .hist-genero{
+      font-size:.62rem;font-weight:700;color:var(--gold);
+      text-transform:uppercase;letter-spacing:.1em;
+      border:1px solid var(--line-gold);border-radius:2rem;
+      padding:.15rem .55rem;white-space:nowrap;margin-top:.3rem;display:inline-block;
+    }
+    .hist-estado{
+      font-size:.62rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.1em;white-space:nowrap;padding-top:.15rem;
+    }
+    .hist-estado.sono{color:var(--accent-green)}
+    .hist-estado.rechazada{color:var(--accent-red)}
+    .hist-hora{font-size:.65rem;color:var(--muted);margin-top:.2rem}
+
+    .hist-empty{
+      text-align:center;padding:2rem 1rem;
+      color:#5f5b55;font-size:.82rem;
+      border:1px dashed var(--line);border-radius:.6rem;
+    }
+
+    .btn-clear-mesa{
+      width:100%;
+      font-family:var(--font-body);font-size:.68rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.1em;cursor:pointer;
+      background:transparent;
+      border:none;border-top:1px solid var(--line);
+      color:var(--muted);
+      padding:.6rem 1rem;text-align:center;
+      transition:background .2s,color .2s;
+    }
+    .btn-clear-mesa:hover{background:rgba(255,107,107,.08);color:var(--accent-red)}
+
+    .historial-footer{
+      margin-top:1rem;padding:.6rem 0;
+      text-align:center;font-size:.68rem;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.15em;
+    }
+
   </style>
 </head>
 <body>
@@ -317,6 +432,23 @@
   <!-- playingList: elemento oculto requerido por el JS, no mostrar al usuario -->
   <div id="playingList" style="display:none" aria-hidden="true"></div>
 
+  </div>
+
+  <!-- ===== HISTORIAL POR MESA ===== -->
+  <div class="historial-wrapper">
+    <div class="historial-header">
+      <h2 class="historial-title">Historial por mesa</h2>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <span class="historial-meta" id="historialMeta">Actualizando…</span>
+        <button class="btn-clear-hist" id="btnClearHist">🗑 Borrar historial</button>
+      </div>
+    </div>
+    <div class="historial-grid" id="historialGrid">
+      <div class="hist-empty">Cargando historial…</div>
+    </div>
+    <div class="historial-footer" id="historialFooter">
+      El historial se borra automáticamente cada 12 horas
+    </div>
   </div>
 
   <!-- ==== BLOQUE ADITIVO KAFEL: toggle claro/oscuro (aislado, no toca lógica original) ==== -->
@@ -475,7 +607,7 @@
             ${song.mesa ? `<div class="song-mesa">📍 ${escapeHtml(song.mesa)}</div>` : ''}
           </div>
           <div class="song-actions">
-            <button class="btn btn-play" onclick="playNow('${song.id}')">▶ Sonando</button>
+            <button class="btn btn-play" onclick="playNow('${song.id}')">✓ Ya sonó</button>
           </div>
         `;
         queueList.appendChild(item);
@@ -583,15 +715,19 @@
             .eq('id', song.id);
         }
 
-        // Marcar nueva como sonando
+        // Marcar como sonada directamente (la columna "Sonando" no está visible)
         const { error } = await supabaseClient
           .from('solicitudes')
-          .update({ estado: 'sonando' })
+          .update({ estado: 'sono' })
           .eq('id', id);
         if (error) throw error;
 
-        showStatus('▶ Ahora sonando...', 'success');
+        // Remover del array local
+        allSongs = allSongs.filter(s => s.id !== id);
+
+        showStatus('✓ Marcada como sonada', 'success');
         fetchSongs();
+        fetchHistorial();
       } catch (err) {
         showStatus('✗ Error', 'error');
         console.error(err);
@@ -642,8 +778,127 @@
         clearInterval(waitForSupabase);
         fetchSongs(); // Carga inicial
         setInterval(fetchSongs, 1000); // Polling cada 1 segundo para actualizaciones en tiempo real
+        fetchHistorial(); // Carga inicial del historial
+        setInterval(fetchHistorial, 30000); // Actualizar historial cada 30 segundos
       }
     }, 100);
+
+    // ===== HISTORIAL POR MESA (bloque aditivo, no toca lógica original) =====
+    let historialData = [];
+
+    async function fetchHistorial() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('historial_solicitudes')
+          .select('*')
+          .order('creada_en', { ascending: false });
+        if (error) throw error;
+        historialData = data || [];
+        renderHistorial();
+      } catch (err) {
+        console.error('Error al traer historial:', err);
+      }
+    }
+
+    function renderHistorial() {
+      const grid = document.getElementById('historialGrid');
+      const meta = document.getElementById('historialMeta');
+
+      if (historialData.length === 0) {
+        grid.innerHTML = '<div class="hist-empty">Sin historial en las últimas 12 horas</div>';
+        meta.textContent = '0 canciones';
+        return;
+      }
+
+      // Agrupar por mesa
+      const porMesa = {};
+      historialData.forEach(h => {
+        const mesa = h.mesa || 'Sin mesa';
+        if (!porMesa[mesa]) porMesa[mesa] = [];
+        porMesa[mesa].push(h);
+      });
+
+      // Ordenar mesas: primero Mesa 1-11, luego Barra 1-8
+      const ordenadas = Object.keys(porMesa).sort((a, b) => {
+        const tipoA = a.startsWith('Mesa') ? 0 : a.startsWith('Barra') ? 1 : 2;
+        const tipoB = b.startsWith('Mesa') ? 0 : b.startsWith('Barra') ? 1 : 2;
+        if (tipoA !== tipoB) return tipoA - tipoB;
+        const numA = parseInt(a.replace(/\D/g,'')) || 0;
+        const numB = parseInt(b.replace(/\D/g,'')) || 0;
+        return numA - numB;
+      });
+
+      grid.innerHTML = '';
+      ordenadas.forEach(mesa => {
+        const canciones = porMesa[mesa];
+        const card = document.createElement('div');
+        card.className = 'mesa-card';
+        const emoji = mesa.startsWith('Barra') ? '🍺' : '🪑';
+        card.innerHTML = `
+          <div class="mesa-card-head">
+            <span class="mesa-card-name">${emoji} ${escapeHtml(mesa)}</span>
+            <span class="mesa-card-count">${canciones.length}</span>
+          </div>
+          ${canciones.map(h => `
+            <div class="hist-item">
+              <div>
+                <div class="hist-cancion">${escapeHtml(h.cancion)}</div>
+                <span class="hist-genero">${escapeHtml(h.artista)}</span>
+                <div class="hist-hora">${formatTime(h.completada_en || h.creada_en)}</div>
+              </div>
+              <div>
+                <div class="hist-estado ${h.estado}">${h.estado === 'sono' ? '✓ Sonó' : '✕ Rechazada'}</div>
+              </div>
+            </div>
+          `).join('')}
+          <button class="btn-clear-mesa" data-mesa="${escapeHtml(mesa)}">🗑 Borrar ${escapeHtml(mesa)}</button>
+        `;
+        grid.appendChild(card);
+      });
+
+      meta.textContent = `${historialData.length} canciones · ${ordenadas.length} mesas/barras`;
+    }
+
+    // Borrar historial completo
+    document.getElementById('btnClearHist').addEventListener('click', async function() {
+      if (!supabaseClient) return;
+      if (!confirm('¿Borrar todo el historial? Esta acción no se puede deshacer.')) return;
+      try {
+        const { error } = await supabaseClient
+          .from('historial_solicitudes')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) throw error;
+        historialData = [];
+        renderHistorial();
+        showStatus('✓ Historial borrado', 'success');
+      } catch (err) {
+        showStatus('✗ Error al borrar historial', 'error');
+        console.error(err);
+      }
+    });
+
+    // Borrar historial de una mesa específica (delegación en el grid)
+    document.getElementById('historialGrid').addEventListener('click', async function(e) {
+      const btn = e.target.closest('.btn-clear-mesa');
+      if (!btn || !supabaseClient) return;
+      const mesa = btn.dataset.mesa;
+      if (!confirm(`¿Borrar el historial de ${mesa}?`)) return;
+      try {
+        const { error } = await supabaseClient
+          .from('historial_solicitudes')
+          .delete()
+          .eq('mesa', mesa);
+        if (error) throw error;
+        historialData = historialData.filter(h => h.mesa !== mesa);
+        renderHistorial();
+        showStatus(`✓ Historial de ${mesa} borrado`, 'success');
+      } catch (err) {
+        showStatus('✗ Error al borrar', 'error');
+        console.error(err);
+      }
+    });
   </script>
 </body>
 </html>
